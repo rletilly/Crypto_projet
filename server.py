@@ -9,7 +9,10 @@ import base64
 import json
 import os
 from ImportAccounts import writeAccounts,readAccounts
+
+#Just clear the screen
 os.system('clear')
+
 # some constants
 InfoBank = b"confirm_Bank"
 host = 'localhost'
@@ -57,17 +60,25 @@ class Client(threading.Thread):
         secretKey = self.handshake()
         print(secretKey.hex())
         # TODO: do your jobs here
+        #Get the shared key and serialize it
         _secretKey =base64.b64encode(secretKey)
+
+        #We use the Fernet method
         cipher = Fernet(_secretKey)
 
         msg_in = self.recv()
+
+        #We decrypt the message
         msg_in = cipher.decrypt(msg_in)
+
+        #We extract alle the informations we need
         msg_in = msg_in.decode().split(':')
         _from = msg_in[1].encode()
         _accountNumber = int(msg_in[3])
         _to = msg_in[5].encode()
         _amount = int(msg_in[7])
 
+        #We check if the client is able to pay
         Accounts = readAccounts()
         print(self.username)
         if _from == self.username :
@@ -83,10 +94,10 @@ class Client(threading.Thread):
         else:
             status = b'You are not the owner of the account'
 
+        #We write in the txt file the changes
         writeAccounts(Accounts)
 
-        print(msg_in)
-
+        #We send the status
         self.send(status)
         return status
 
@@ -95,6 +106,7 @@ def new_request(r):
     print(str(username))
     # TODO: read from the database the corresponding accounts info
     accounts = []
+    #We open the file to get te password
     with open('database.txt','rb') as file :
         lines = file.readlines()
 

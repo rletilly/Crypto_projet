@@ -60,14 +60,15 @@ class Client:
 
     def transfer(self,nb, to, amount):
         secretKey = self.handshake()
-        #print(type(secretKey))
-        #print(len(secretKey))
         # TODO: transfer `amount` of money from your balance to `to`.
+
+        #We encode the secret key because Fernet require a Base64 encoding
         _secretKey =base64.b64encode(secretKey)
         cipher = Fernet(_secretKey)
+        #We send our request
         msg_out = str('sender:'+str(self.username.decode())+':accountNumber:'+str(nb)+':receiver:'+str(to.decode())+':amount:'+str(amount)).encode()
         msg_out = cipher.encrypt(msg_out)
-        #print(msg_out)
+        
         
         self.send(msg_out)
         

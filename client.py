@@ -3,6 +3,11 @@ from pwn import *
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
+from cryptography.fernet import Fernet
+import base64
+import json
+import os
+os.system('clear')
 
 # some constants
 InfoBank = b"confirm_Bank"
@@ -11,7 +16,7 @@ port = 9999
 
 
 username = b'A'
-password = b'12345678'
+password = b'123456'
 receiver = b'B'
 
 
@@ -53,11 +58,19 @@ class Client:
         assert confirm_B == expected_confirm_B
         return key
 
-    def transfer(self, to, amount):
+    def transfer(self,nb, to, amount):
         secretKey = self.handshake()
-        print(secretKey.hex())
+        #print(type(secretKey))
+        #print(len(secretKey))
         # TODO: transfer `amount` of money from your balance to `to`.
-
+        _secretKey =base64.b64encode(secretKey)
+        cipher = Fernet(_secretKey)
+        msg_out = str('sender:'+str(self.username.decode())+':accountNumber:'+str(nb)+':receiver:'+str(to.decode())+':amount:'+str(amount)).encode()
+        msg_out = cipher.encrypt(msg_out)
+        #print(msg_out)
+        
+        self.send(msg_out)
+        
         status = self.recv()
         self.close()
         return status
@@ -66,5 +79,5 @@ class Client:
 if __name__ == "__main__":
     client = Client(username, password)
     client.connect(host, port)
-    status = client.transfer(receiver, 999)
+    status = client.transfer(1,receiver, 999)
     print(status)
